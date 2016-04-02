@@ -11,11 +11,11 @@ import android.widget.ListView;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class ForecastFragment extends Fragment {
 
     private ListView listviewForecast;
 
-    public MainActivityFragment() {
+    public ForecastFragment() {
     }
 
     @Override
