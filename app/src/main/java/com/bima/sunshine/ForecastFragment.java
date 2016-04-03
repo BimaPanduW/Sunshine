@@ -5,6 +5,9 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -35,6 +38,8 @@ public class ForecastFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         listviewForecast = (ListView) view.findViewById(R.id.listview_forecast);
 
+        setHasOptionsMenu(true);
+
         String[] foreCastArray = {
                             "Today - Sunny - 88 / 63",
                             "Tomorrow - Foggy - 70 / 46",
@@ -59,6 +64,21 @@ public class ForecastFragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.forecastfragment, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_refresh:
+                return true;
+
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private URL getWeatherUrl() throws MalformedURLException {
