@@ -1,5 +1,6 @@
 package com.bima.sunshine;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 /**
@@ -27,6 +29,11 @@ import java.net.URL;
 public class ForecastFragment extends Fragment {
 
     private ListView listviewForecast;
+
+    private String postalCode = "94043";
+    private String format = "json";
+    private String units = "metrics";
+    private String days = "7";
 
     public ForecastFragment() {
     }
@@ -57,12 +64,6 @@ public class ForecastFragment extends Fragment {
 
         listviewForecast.setAdapter(arrayAdapter);
 
-        try {
-            new FetchWeatherTask().execute(getWeatherUrl());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
         return view;
     }
 
@@ -75,35 +76,45 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_refresh:
-                return true;
+                new FetchWeatherTask().execute(postalCode);
+                break;
 
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private URL getWeatherUrl() throws MalformedURLException {
-        return new URL("http://api.openweathermap.org/data/2.5/forecast/daily?q=94043,US&cnt=7&units=metric&appid=b92f80be5981262933e52d95fb637140");
+    private String getBaseUrl() {
+        return "http://api.openweathermap.org/data/2.5/forecast/daily?";
     }
 
-    private class FetchWeatherTask extends AsyncTask<URL, Integer, Long>{
+    private String getAppId(){
+        return "b92f80be5981262933e52d95fb637140";
+    }
+
+    private class FetchWeatherTask extends AsyncTask<String, Void, Void>{
+        final String QUERY_PARAM = "q";
+        final String FORMAT_PARAM = "mode";
+        final String UNITS_PARAM = "units";
+        final String DAYS_PARAM = "cnt";
+        final String APPID_PARAM = "appid";
+
         HttpURLConnection urlConnection;
         BufferedReader bufferedReader;
         String forecastJsonStr;
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected void onPostExecute(Long aLong) {
-            super.onPostExecute(aLong);
-        }
-
-        @Override
-        protected Long doInBackground(URL... params) {
+        protected Void doInBackground(String... params) {
             try{
-                urlConnection = (HttpURLConnection) params[0].openConnection();
+                Uri uri = Uri.parse(getBaseUrl()).buildUpon()
+                        .appendQueryParameter(QUERY_PARAM, params[0])
+                        .appendQueryParameter(FORMAT_PARAM, format)
+                        .appendQueryParameter(DAYS_PARAM, days)
+                        .appendQueryParameter(UNITS_PARAM, units)
+                        .appendQueryParameter(APPID_PARAM, getAppId()).build();
+
+                URL url = new URL(uri.toString());
+
+                urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
 
