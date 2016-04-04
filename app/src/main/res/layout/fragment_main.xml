@@ -13,4 +13,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/listview_forecast"/>
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/wait_data"
+        android:layout_gravity="center_horizontal|top" />
 </FrameLayout>

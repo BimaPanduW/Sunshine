@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +29,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -35,11 +38,13 @@ import java.text.SimpleDateFormat;
 public class ForecastFragment extends Fragment {
 
     private ListView listviewForecast;
+    private ProgressBar waitData;
 
     private String postalCode = "94043";
     private String format = "json";
     private String units = "metrics";
     private String days = "7";
+    private ArrayAdapter<String> arrayAdapter;
 
     public ForecastFragment() {
     }
@@ -50,25 +55,11 @@ public class ForecastFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         listviewForecast = (ListView) view.findViewById(R.id.listview_forecast);
+        waitData = (ProgressBar) view.findViewById(R.id.wait_data);
 
         setHasOptionsMenu(true);
 
-        String[] foreCastArray = {
-                            "Today - Sunny - 88 / 63",
-                            "Tomorrow - Foggy - 70 / 46",
-                            "Weds - Cloudy - 72 / 63",
-                            "Thurs - Rainy - 64 / 51",
-                            "Fri - Foggy - 70 / 46",
-                            "Sat - Sunny - 76 / 68"
-        };
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-                getActivity(),
-                R.layout.list_item_forecast,
-                R.id.list_item_forecast_textview,
-                foreCastArray);
-
-        listviewForecast.setAdapter(arrayAdapter);
+        new FetchWeatherTask().execute(postalCode);
 
         return view;
     }
@@ -143,9 +134,6 @@ public class ForecastFragment extends Fragment {
             resultStrs[i] = day + " - " + description + " - " + highAndLow;
         }
 
-        for (String s : resultStrs) {
-            Log.v("Bima", "Forecast entry: " + s);
-        }
         return resultStrs;
     }
 
@@ -172,6 +160,13 @@ public class ForecastFragment extends Fragment {
         HttpURLConnection urlConnection;
         BufferedReader bufferedReader;
         String forecastJsonStr;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            waitData.setVisibility(View.VISIBLE);
+            listviewForecast.setVisibility(View.GONE);
+        }
 
         @Override
         protected Void doInBackground(String... params) {
@@ -221,14 +216,27 @@ public class ForecastFragment extends Fragment {
                 }
             }
 
-            Log.d("Bima", forecastJsonStr);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            waitData.setVisibility(View.GONE);
+            listviewForecast.setVisibility(View.VISIBLE);
             try {
-                String[] lala = getWeatherDataFromJson(forecastJsonStr, 7);
-                Log.d("Bima", lala.toString());
+                String[] data = getWeatherDataFromJson(forecastJsonStr, 7);
+                ArrayList<String> foreCastArray = new ArrayList<>(Arrays.asList(data));
+                arrayAdapter = new ArrayAdapter<>(
+                        getActivity(),
+                        R.layout.list_item_forecast,
+                        R.id.list_item_forecast_textview,
+                        foreCastArray);
+
+                listviewForecast.setAdapter(arrayAdapter);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            return null;
         }
     }
 }
