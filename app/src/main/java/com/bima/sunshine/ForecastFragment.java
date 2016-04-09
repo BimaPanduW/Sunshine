@@ -12,9 +12,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +47,7 @@ public class ForecastFragment extends Fragment {
     private String units = "metrics";
     private String days = "7";
     private ArrayAdapter<String> arrayAdapter;
+    private String[] resultStrs;
 
     public ForecastFragment() {
     }
@@ -60,6 +63,13 @@ public class ForecastFragment extends Fragment {
         setHasOptionsMenu(true);
 
         new FetchWeatherTask().execute(postalCode);
+
+        listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getContext(), resultStrs[position], Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }
@@ -108,7 +118,7 @@ public class ForecastFragment extends Fragment {
 
         dayTime = new Time();
 
-        String[] resultStrs = new String[numDays];
+        resultStrs = new String[numDays];
 
         for(int i = 0; i < weatherArray.length(); i++) {
             // For now, using the format "Day, description, hi/low"
