@@ -47,7 +47,6 @@ public class ForecastFragment extends Fragment {
     private String units = "metrics";
     private String days = "7";
     private ArrayAdapter<String> arrayAdapter;
-    private String[] resultStrs;
 
     public ForecastFragment() {
     }
@@ -67,7 +66,7 @@ public class ForecastFragment extends Fragment {
         listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getContext(), resultStrs[position], Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), arrayAdapter.getItem(position), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -118,7 +117,7 @@ public class ForecastFragment extends Fragment {
 
         dayTime = new Time();
 
-        resultStrs = new String[numDays];
+        String[] resultStrs = new String[numDays];
 
         for(int i = 0; i < weatherArray.length(); i++) {
             // For now, using the format "Day, description, hi/low"
