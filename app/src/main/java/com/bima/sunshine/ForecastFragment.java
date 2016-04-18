@@ -4,9 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,7 +19,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,16 +44,16 @@ public class ForecastFragment extends Fragment {
 
     private String postalCode = "94043";
     private String format = "json";
-    private String units = "metrics";
     private String days = "7";
     private ArrayAdapter<String> arrayAdapter;
+    private String unitType;
 
     public ForecastFragment() {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         listviewForecast = (ListView) view.findViewById(R.id.listview_forecast);
@@ -82,7 +79,7 @@ public class ForecastFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_refresh:
                 updateWeather();
                 return true;
@@ -102,6 +99,7 @@ public class ForecastFragment extends Fragment {
     private void updateWeather() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        unitType = preferences.getString(getString(R.string.pref_units_key), getString(R.string.pref_units_metric));
         new FetchWeatherTask().execute(location);
     }
 
@@ -109,7 +107,7 @@ public class ForecastFragment extends Fragment {
         return "http://api.openweathermap.org/data/2.5/forecast/daily?";
     }
 
-    private String getAppId(){
+    private String getAppId() {
         return "b92f80be5981262933e52d95fb637140";
     }
 
@@ -135,7 +133,7 @@ public class ForecastFragment extends Fragment {
 
         String[] resultStrs = new String[numDays];
 
-        for(int i = 0; i < weatherArray.length(); i++) {
+        for (int i = 0; i < weatherArray.length(); i++) {
             // For now, using the format "Day, description, hi/low"
             String day;
             String description;
@@ -145,7 +143,7 @@ public class ForecastFragment extends Fragment {
 
             long dateTime;
 
-            dateTime = dayTime.setJulianDay(julianStartDay+i);
+            dateTime = dayTime.setJulianDay(julianStartDay + i);
             day = getReadableDateString(dateTime);
 
             JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
@@ -155,19 +153,27 @@ public class ForecastFragment extends Fragment {
             double high = temperatureObject.getDouble(OWM_MAX);
             double low = temperatureObject.getDouble(OWM_MIN);
 
-            highAndLow = formatHighLows(high, low);
+            highAndLow = formatHighLows(high, low, unitType);
             resultStrs[i] = day + " - " + description + " - " + highAndLow;
         }
 
         return resultStrs;
     }
 
-    private String getReadableDateString(long time){
+    private String getReadableDateString(long time) {
         SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd");
         return shortenedDateFormat.format(time);
     }
 
-    private String formatHighLows(double high, double low) {
+    private String formatHighLows(double high, double low, String unitType) {
+
+        if (unitType.equals(getString(R.string.pref_units_imperial))) {
+            high = (high * 1.8) + 32;
+            low = (low * 1.8) + 32;
+        } else if (!unitType.equals(getString(R.string.pref_units_metric))) {
+            Log.d("sunshine", "Unit type not found: " + unitType);
+        }
+
         long roundedHigh = Math.round(high);
         long roundedLow = Math.round(low);
 
@@ -175,7 +181,7 @@ public class ForecastFragment extends Fragment {
         return highLowStr;
     }
 
-    private class FetchWeatherTask extends AsyncTask<String, Void, Void>{
+    private class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         final String QUERY_PARAM = "q";
         final String FORMAT_PARAM = "mode";
         final String UNITS_PARAM = "units";
@@ -195,12 +201,12 @@ public class ForecastFragment extends Fragment {
 
         @Override
         protected Void doInBackground(String... params) {
-            try{
+            try {
                 Uri uri = Uri.parse(getBaseUrl()).buildUpon()
                         .appendQueryParameter(QUERY_PARAM, params[0])
                         .appendQueryParameter(FORMAT_PARAM, format)
                         .appendQueryParameter(DAYS_PARAM, days)
-                        .appendQueryParameter(UNITS_PARAM, units)
+                        .appendQueryParameter(UNITS_PARAM, unitType)
                         .appendQueryParameter(APPID_PARAM, getAppId()).build();
 
                 URL url = new URL(uri.toString());
@@ -212,7 +218,7 @@ public class ForecastFragment extends Fragment {
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuilder stringBuilder = new StringBuilder();
 
-                if(inputStream != null){
+                if (inputStream != null) {
                     bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
                     String line;
@@ -228,11 +234,11 @@ public class ForecastFragment extends Fragment {
             } catch (IOException e) {
                 Log.e("Bima", "Error ", e);
             } finally {
-                if(urlConnection != null){
+                if (urlConnection != null) {
                     urlConnection.disconnect();
                 }
 
-                if(bufferedReader != null){
+                if (bufferedReader != null) {
                     try {
                         bufferedReader.close();
                     } catch (IOException e) {
