@@ -68,7 +68,8 @@ public class ForecastFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 //                Toast.makeText(getContext(), arrayAdapter.getItem(position), Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getContext(), DetailActivity.class);
+                Intent intent = new Intent(getContext(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, arrayAdapter.getItem(position));
                 startActivity(intent);
             }
         });
