@@ -1,8 +1,10 @@
 package com.bima.sunshine;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.text.format.Time;
@@ -62,12 +64,11 @@ public class ForecastFragment extends Fragment {
 
         setHasOptionsMenu(true);
 
-        new FetchWeatherTask().execute(postalCode);
+//        new FetchWeatherTask().execute(postalCode);
 
         listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Toast.makeText(getContext(), arrayAdapter.getItem(position), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getContext(), DetailActivity.class)
                         .putExtra(Intent.EXTRA_TEXT, arrayAdapter.getItem(position));
                 startActivity(intent);
@@ -86,8 +87,12 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_refresh:
-                new FetchWeatherTask().execute(postalCode);
-                break;
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+                new FetchWeatherTask().execute(location);
+                return true;
+            default:
+
 
         }
         return super.onOptionsItemSelected(item);
