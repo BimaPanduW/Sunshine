@@ -63,9 +63,6 @@ public class ForecastFragment extends Fragment {
         waitData = (ProgressBar) view.findViewById(R.id.wait_data);
 
         setHasOptionsMenu(true);
-
-//        new FetchWeatherTask().execute(postalCode);
-
         listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -87,15 +84,25 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_refresh:
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
-                new FetchWeatherTask().execute(location);
+                updateWeather();
                 return true;
             default:
 
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    private void updateWeather() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        new FetchWeatherTask().execute(location);
     }
 
     private String getBaseUrl() {
