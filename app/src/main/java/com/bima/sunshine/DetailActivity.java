@@ -3,8 +3,9 @@ package com.bima.sunshine;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,11 +16,15 @@ import android.widget.TextView;
 
 public class DetailActivity extends AppCompatActivity {
 
+    private ShareActionProvider shareActionProvider;
+    private String detailSTR;
+    private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-        Log.d("Bima", getIntent().getStringExtra(Intent.EXTRA_TEXT));
+        detailSTR = getIntent().getStringExtra(Intent.EXTRA_TEXT);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment())
@@ -31,7 +36,23 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.detail, menu);
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
+        if (shareActionProvider != null) {
+            shareActionProvider.setShareIntent(createShareForecastIntent());
+        } else {
+            Log.d("Sunshine", "Share Action Provider is null?");
+        }
         return true;
+    }
+
+    private Intent createShareForecastIntent() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, detailSTR + FORECAST_SHARE_HASHTAG);
+        return shareIntent;
     }
 
     @Override
