@@ -1,5 +1,6 @@
 package com.bima.sunshine.data;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
@@ -95,22 +96,26 @@ public class TestDb extends AndroidTestCase {
         also make use of the ValidateCurrentRecord function from within TestUtilities.
     */
     public void testLocationTable() {
-        // First step: Get reference to writable database
+        WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        // Create ContentValues of what you want to insert
-        // (you can use the createNorthPoleLocationValues if you wish)
+        ContentValues testValues = TestUtilities.createNorthPoleLocationValues();
 
-        // Insert ContentValues into database and get a row ID back
+        long locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, testValues);
 
-        // Query the database and receive a Cursor back
+        assertTrue(locationRowId != -1);
 
-        // Move the cursor to a valid database row
+        Cursor cursor = db.query(WeatherContract.LocationEntry.TABLE_NAME,
+                null, null, null, null, null, null);
 
-        // Validate data in resulting Cursor with the original ContentValues
-        // (you can use the validateCurrentRecord function in TestUtilities to validate the
-        // query if you like)
+        assertTrue( "Error: No Records returned from location query", cursor.moveToFirst() );
 
-        // Finally, close the cursor and database
+        TestUtilities.validateCurrentRecord("Error: Location Query Validation Failed", cursor, testValues);
+
+        assertFalse( "Error: More than one record returned from location query", cursor.moveToNext());
+
+        cursor.close();
+        db.close();
 
     }
 
