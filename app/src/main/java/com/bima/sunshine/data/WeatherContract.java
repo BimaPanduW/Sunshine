@@ -7,7 +7,7 @@ import android.provider.BaseColumns;
 import android.text.format.Time;
 
 public class WeatherContract {
-    public static final String CONTENT_AUTHORITY = "com.bima.sunshine.app";
+    public static final String CONTENT_AUTHORITY = "com.bima.sunshine";
 
     // Use CONTENT_AUTHORITY to create the base of all URI's which apps will use to contact
     // the content provider.
