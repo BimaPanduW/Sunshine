@@ -108,7 +108,7 @@ public class WeatherProvider extends ContentProvider {
         uriMatcher.addURI(WeatherContract.CONTENT_AUTHORITY, WeatherContract.PATH_WEATHER + "/*/#", WEATHER_WITH_LOCATION_AND_DATE);
         uriMatcher.addURI(WeatherContract.CONTENT_AUTHORITY, WeatherContract.PATH_WEATHER + "/*", LOCATION);
 
-        return null;
+        return uriMatcher;
     }
 
     /*
