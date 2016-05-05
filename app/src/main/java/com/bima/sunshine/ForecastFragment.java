@@ -60,6 +60,13 @@ public class ForecastFragment extends Fragment {
         waitData = (ProgressBar) view.findViewById(R.id.wait_data);
 
         setHasOptionsMenu(true);
+        arrayAdapter = new ArrayAdapter<String>(
+                        getActivity(), // The current context (this activity)
+                        R.layout.list_item_forecast, // The name of the layout ID.
+                        R.id.list_item_forecast_textview, // The ID of the textview to populate.
+                        new ArrayList<String>());
+
+        listviewForecast.setAdapter(arrayAdapter);
         listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -68,6 +75,9 @@ public class ForecastFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+        waitData.setVisibility(View.GONE);
+        listviewForecast.setVisibility(View.VISIBLE);
 
         return view;
     }
