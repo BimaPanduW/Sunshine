@@ -82,11 +82,12 @@ public class DetailActivity extends AppCompatActivity {
 
             TextView textDetail = (TextView) rootView.findViewById(R.id.text_detail);
 
-            detail = getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT);
+            detail = "";
 
-            if (!detail.isEmpty()) {
-                textDetail.setText(detail);
+            if (getActivity().getIntent() != null) {
+                detail = getActivity().getIntent().getDataString();
             }
+            textDetail.setText(detail);
             return rootView;
         }
     }
