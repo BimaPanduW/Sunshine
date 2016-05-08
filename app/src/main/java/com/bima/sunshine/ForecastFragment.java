@@ -2,8 +2,8 @@ package com.bima.sunshine;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -16,23 +16,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+
+import com.bima.sunshine.data.WeatherContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -45,7 +38,7 @@ public class ForecastFragment extends Fragment {
     private String postalCode = "94043";
     private String format = "json";
     private String days = "7";
-    private ArrayAdapter<String> arrayAdapter;
+    private ForecastAdapter forecastAdapter;
     private String unitType;
 
     public ForecastFragment() {
@@ -59,22 +52,24 @@ public class ForecastFragment extends Fragment {
         listviewForecast = (ListView) view.findViewById(R.id.listview_forecast);
         waitData = (ProgressBar) view.findViewById(R.id.wait_data);
 
-        setHasOptionsMenu(true);
-        arrayAdapter = new ArrayAdapter<String>(
-                        getActivity(), // The current context (this activity)
-                        R.layout.list_item_forecast, // The name of the layout ID.
-                        R.id.list_item_forecast_textview, // The ID of the textview to populate.
-                        new ArrayList<String>());
+        String locationSetting = Utility.getPreferredLocation(getActivity());
 
-        listviewForecast.setAdapter(arrayAdapter);
-        listviewForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getContext(), DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, arrayAdapter.getItem(position));
-                startActivity(intent);
-            }
-        });
+        setHasOptionsMenu(true);
+
+        // Sort order:  Ascending, by date.
+        String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
+        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
+                locationSetting, System.currentTimeMillis());
+
+        Cursor cur = getActivity().getContentResolver().query(weatherForLocationUri,
+                null, null, null, sortOrder);
+
+        // The CursorAdapter will take data from our cursor and populate the ListView
+        // However, we cannot use FLAG_AUTO_REQUERY since it is deprecated, so we will end
+        // up with an empty list the first time we run.
+        forecastAdapter = new ForecastAdapter(getActivity(), cur, 0);
+
+        listviewForecast.setAdapter(forecastAdapter);
 
         waitData.setVisibility(View.GONE);
         listviewForecast.setVisibility(View.VISIBLE);
@@ -107,10 +102,8 @@ public class ForecastFragment extends Fragment {
     }
 
     private void updateWeather() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
-        unitType = preferences.getString(getString(R.string.pref_units_key), getString(R.string.pref_units_metric));
-        new FetchWeatherTask(getActivity(), arrayAdapter).execute(location);
+        String location =  Utility.getPreferredLocation(getActivity());
+        new FetchWeatherTask(getActivity()).execute(location);
     }
 
     private String getBaseUrl() {
