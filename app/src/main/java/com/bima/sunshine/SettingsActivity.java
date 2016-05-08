@@ -1,12 +1,10 @@
 package com.bima.sunshine;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.view.KeyEvent;
 
 /**
  * Created by bimapw on 4/18/16.
