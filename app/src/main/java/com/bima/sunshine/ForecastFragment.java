@@ -1,12 +1,13 @@
 package com.bima.sunshine;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +16,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
@@ -30,7 +30,9 @@ import java.text.SimpleDateFormat;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ForecastFragment extends Fragment {
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+
+    private static int MY_FORECAST_LOADED_ID = 0;
 
     private ListView listviewForecast;
     private ProgressBar waitData;
@@ -52,22 +54,13 @@ public class ForecastFragment extends Fragment {
         listviewForecast = (ListView) view.findViewById(R.id.listview_forecast);
         waitData = (ProgressBar) view.findViewById(R.id.wait_data);
 
-        String locationSetting = Utility.getPreferredLocation(getActivity());
 
         setHasOptionsMenu(true);
-
-        // Sort order:  Ascending, by date.
-        String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
-        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
-                locationSetting, System.currentTimeMillis());
-
-        Cursor cur = getActivity().getContentResolver().query(weatherForLocationUri,
-                null, null, null, sortOrder);
 
         // The CursorAdapter will take data from our cursor and populate the ListView
         // However, we cannot use FLAG_AUTO_REQUERY since it is deprecated, so we will end
         // up with an empty list the first time we run.
-        forecastAdapter = new ForecastAdapter(getActivity(), cur, 0);
+        forecastAdapter = new ForecastAdapter(getActivity(), null, 0);
 
         listviewForecast.setAdapter(forecastAdapter);
 
@@ -102,7 +95,7 @@ public class ForecastFragment extends Fragment {
     }
 
     private void updateWeather() {
-        String location =  Utility.getPreferredLocation(getActivity());
+        String location = Utility.getPreferredLocation(getActivity());
         new FetchWeatherTask(getActivity()).execute(location);
     }
 
@@ -181,4 +174,34 @@ public class ForecastFragment extends Fragment {
         return highLowStr;
     }
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MY_FORECAST_LOADED_ID, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String locationSetting = Utility.getPreferredLocation(getActivity());
+
+        // Sort order:  Ascending, by date.
+        String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
+        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
+                locationSetting, System.currentTimeMillis());
+
+        CursorLoader cur = new CursorLoader(getActivity(), weatherForLocationUri,
+                null, null, null, sortOrder);
+
+        return cur;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        forecastAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        forecastAdapter.swapCursor(null);
+    }
 }
